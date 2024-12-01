@@ -1,42 +1,49 @@
 use std::convert::TryFrom;
 use std::fs;
+use std::iter::zip;
 
 pub fn run(file_path: &str) {
     let contents = fs::read_to_string(file_path).expect("Failed to read file");
     let location_ids: Vec<&str> = contents.split_whitespace().collect();
 
-    let mut location_list_one: Vec<u32> = Vec::new();
-    let mut location_list_two: Vec<u32> = Vec::new();
+    let (location_list_one, location_list_two): (Vec<u32>, Vec<u32>) = {
+        let (mut even, mut odd) = location_ids.iter().enumerate().fold(
+            (Vec::new(), Vec::new()),
+            |(mut even, mut odd), (i, element)| {
+                if i % 2 == 0 {
+                    even.push(element.parse().unwrap());
+                } else {
+                    odd.push(element.parse().unwrap());
+                }
+                (even, odd)
+            },
+        );
 
-    for (i, &location_id) in location_ids.iter().enumerate() {
-        if i % 2 == 0 {
-            location_list_one.push(location_id.parse().unwrap());
-        } else {
-            location_list_two.push(location_id.parse().unwrap());
-        }
-    }
+        even.sort();
+        odd.sort();
 
-    location_list_one.sort();
-    location_list_two.sort();
+        (even, odd)
+    };
 
-    let mut total_distance: u32 = 0;
-    for (i, &location_id) in location_list_one.iter().enumerate() {
-        total_distance += location_id.abs_diff(location_list_two[i]);
-    }
+    let total_distance: u32 = zip(location_list_one.clone(), location_list_two.clone())
+        .map(|(x, y)| x.abs_diff(y))
+        .sum();
 
-    println!("{}", total_distance);
+    println!("Total Distance: {}", total_distance);
 
-    let mut similarity_score: u32 = 0;
-    for &location_id in location_list_one.iter() {
-        similarity_score += location_id
-            * u32::try_from(
-                location_list_two
-                    .iter()
-                    .filter(|&x| *x == location_id)
-                    .count(),
-            )
-            .unwrap();
-    }
+    let similarity_score: u32 = location_list_one
+        .iter()
+        .map(|location_id| {
+            location_id
+                * u32::try_from(
+                    location_list_two
+                        .iter()
+                        .filter(|&element| *element == *location_id)
+                        .count(),
+                )
+                .unwrap()
+        })
+        .sum();
 
-    println!("{}", similarity_score);
+    println!("Similarity Score: {}", similarity_score);
 }
