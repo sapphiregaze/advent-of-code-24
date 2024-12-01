@@ -1,3 +1,4 @@
+use std::convert::TryFrom;
 use std::fs;
 
 pub fn run(file_path: &str) {
@@ -24,4 +25,18 @@ pub fn run(file_path: &str) {
     }
 
     println!("{}", total_distance);
+
+    let mut similarity_score: u32 = 0;
+    for &location_id in location_list_one.iter() {
+        similarity_score += location_id
+            * u32::try_from(
+                location_list_two
+                    .iter()
+                    .filter(|&x| *x == location_id)
+                    .count(),
+            )
+            .unwrap();
+    }
+
+    println!("{}", similarity_score);
 }
