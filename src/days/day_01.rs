@@ -1,6 +1,5 @@
-use std::convert::TryFrom;
+use std::collections::HashMap;
 use std::fs;
-use std::iter::zip;
 
 pub fn run(file_path: &str) {
     let contents = fs::read_to_string(file_path).expect("Failed to read file");
@@ -19,30 +18,28 @@ pub fn run(file_path: &str) {
             },
         );
 
-        even.sort();
-        odd.sort();
+        even.sort_unstable();
+        odd.sort_unstable();
 
         (even, odd)
     };
 
-    let total_distance: u32 = zip(location_list_one.clone(), location_list_two.clone())
-        .map(|(x, y)| x.abs_diff(y))
+    let total_distance: u32 = location_list_one
+        .iter()
+        .zip(location_list_two.iter())
+        .map(|(x, y)| x.abs_diff(*y))
         .sum();
 
     println!("Total Distance: {}", total_distance);
 
+    let mut location_map: HashMap<u32, u32> = HashMap::new();
+    for &location in &location_list_two {
+        *location_map.entry(location).or_insert(0) += 1;
+    }
+
     let similarity_score: u32 = location_list_one
         .iter()
-        .map(|location_id| {
-            location_id
-                * u32::try_from(
-                    location_list_two
-                        .iter()
-                        .filter(|&element| *element == *location_id)
-                        .count(),
-                )
-                .unwrap()
-        })
+        .map(|&location_id| location_id * location_map.get(&location_id).unwrap_or(&0))
         .sum();
 
     println!("Similarity Score: {}", similarity_score);
