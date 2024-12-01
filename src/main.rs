@@ -9,6 +9,7 @@ fn main() {
 
     match day {
         1 => days::day_01::run(input_file),
+        2 => days::day_02::run(input_file),
         _ => println!("invalid input."),
     }
 }
