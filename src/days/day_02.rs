@@ -13,41 +13,25 @@ pub fn run(file_path: &str) {
         })
         .collect();
 
-    let is_increasing = |report: Vec<u8>| -> bool {
-        let increase = report
-            .windows(2)
-            .map(|s| (s[0], s[1]))
-            .map(|(x, y)| x < y)
-            .all(|x| x);
-
-        increase
+    let is_sorted_by = |report: &Vec<u8>, cmp: fn(u8, u8) -> bool| -> bool {
+        report.windows(2).all(|pair| cmp(pair[0], pair[1]))
     };
 
-    let is_decreasing = |report: Vec<u8>| -> bool {
-        let decrease = report
-            .windows(2)
-            .map(|s| (s[0], s[1]))
-            .map(|(x, y)| x > y)
-            .all(|x| x);
-
-        decrease
-    };
-
-    let is_in_range = |report: Vec<u8>| -> bool {
-        let safe = report
+    let is_increasing = |report: &Vec<u8>| is_sorted_by(report, |x, y| x < y);
+    let is_decreasing = |report: &Vec<u8>| is_sorted_by(report, |x, y| x > y);
+    let is_in_range = |report: &Vec<u8>| -> bool {
+        let in_range = report
             .windows(2)
             .map(|s| (s[0], s[1]))
             .all(|(x, y)| x.abs_diff(y) >= 1 && x.abs_diff(y) <= 3);
-        safe
+        in_range
     };
 
-    let num_safe_reports: usize = reports
-        .iter()
-        .filter(|&report| {
-            is_in_range(report.clone())
-                && (is_increasing(report.clone()) || is_decreasing(report.clone()))
-        })
-        .count();
+    let is_safe = |report: &Vec<u8>| -> bool {
+        (is_increasing(report) || is_decreasing(report)) && is_in_range(report)
+    };
+
+    let num_safe_reports: usize = reports.iter().filter(|&report| is_safe(report)).count();
 
     println!("Number of Safe Reports: {}", num_safe_reports)
 }
