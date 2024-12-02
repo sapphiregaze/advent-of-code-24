@@ -30,36 +30,32 @@ pub fn run(file_path: &str) {
         (is_increasing(report) || is_decreasing(report)) && is_in_range(report)
     };
 
-    let num_safe_reports: usize = reports.iter().filter(|&report| is_safe(report)).count();
+    let num_safe_reports = reports.iter().filter(|&report| is_safe(report)).count();
 
     println!("Number of Safe Reports: {}", num_safe_reports);
 
-    // Generates all possible permutations of report when a single level is removed
-    let report_permutations = |report: &Vec<u8>| -> Vec<Vec<u8>> {
-        let mut permutations: Vec<Vec<u8>> = Vec::new();
-        for i in 0..report.len() {
-            let mut modified = report.clone();
-            modified.remove(i);
-            permutations.push(modified);
-        }
-        permutations
-    };
-
-    // For each report, if any of the generated permutations is considered as
-    // safe, then that report is considered as safe
-    let mut num_safe_reports = 0;
-    for i in 0..reports.len() {
-        if (report_permutations(&reports[i]))
-            .iter()
-            .map(|report| is_safe(&report))
-            .any(|x| x)
-        {
-            num_safe_reports += 1;
-        }
-    }
+    let num_safe_reports = reports
+        .iter()
+        .filter(|report| {
+            is_safe(report) || generate_subreports(report).any(|permutation| is_safe(&permutation))
+        })
+        .count();
 
     println!(
         "Number of Safe Reports (Problem Dampener): {}",
         num_safe_reports
     );
+}
+
+/// Generates all possible subreports by removing one element at each position in the input.
+/// Returns an iterator that yields a new `Vec<u8>` for each subreport.
+fn generate_subreports(report: &Vec<u8>) -> impl Iterator<Item = Vec<u8>> + '_ {
+    (0..report.len()).map(move |index| {
+        report
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != index)
+            .map(|(_, &val)| val)
+            .collect()
+    })
 }
